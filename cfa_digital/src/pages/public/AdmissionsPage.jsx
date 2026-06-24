@@ -18,6 +18,7 @@ export default function AdmissionsPage() {
     nom: '',
     prenom: '',
     email: '',
+    telephone: '',
     motDePasse: '',
     confirmation: '',
     formation: formations[0],
@@ -89,6 +90,7 @@ export default function AdmissionsPage() {
         nom: formData.nom,
         prenom: formData.prenom,
         email: formData.email,
+        telephone: formData.telephone,
         motDePasse: formData.motDePasse,
         formation: formData.formation,
         sessionId: formData.sessionId,
@@ -104,7 +106,6 @@ export default function AdmissionsPage() {
     }
   };
 
-  
 
   return (
     <section className="grid gap-6 lg:grid-cols-[1fr_420px]">
@@ -159,6 +160,13 @@ export default function AdmissionsPage() {
             className="w-full rounded-md border border-gray-300 px-3 py-2"
             value={formData.email}
             onChange={(event) => updateField('email', event.target.value)}
+          />
+          <input
+            type="tel"
+            placeholder="Téléphone (ex: +336...)"
+            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            value={formData.telephone}
+            onChange={(event) => updateField('telephone', event.target.value)}
           />
           <div>
             <label htmlFor="tenantId" className="mb-1 block text-sm font-medium text-gray-700">
