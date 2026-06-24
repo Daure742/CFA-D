@@ -1,0 +1,46 @@
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+.env.*.local
+.env.prod
+
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log
+yarn-error.log
+
+# Production build
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database (local MongoDB)
+data/
+mongodb/
+
+# Uploads
+uploads/
+public/uploads/
+
+# Optional npm cache
+.npm
+.eslintcache
+
+# Socket.io temporary files
+.socket.io/

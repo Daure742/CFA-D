@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: cfa_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: cfa_digital
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: cfa_backend_dev
+    container_name: cfa_backend_dev
+    working_dir: /usr/src/app
+    volumes:
+      - ./backend:/usr/src/app:delegated
+      - /usr/src/app/node_modules
+    command: sh -c "npm install --silent && npm run dev"
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      # Si MONGO_URI est fourni par l'hôte (ex: connexion MongoDB Atlas), il sera utilisé.
+      # Sinon, le compose injecte l'URI du service `mongo` local.
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/cfa_digital}
+      - JWT_ACCESS_SECRET=dev_jwt_access_secret
+      - JWT_REFRESH_SECRET=dev_jwt_refresh_secret
+      - JWT_ACCESS_EXPIRE=15m
+      - JWT_REFRESH_EXPIRE=7d
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  # Optionnel: interface d'administration MongoDB (utile en dev)
+  mongo-express:
+    image: mongo-express:1.0.0
+    container_name: cfa_mongo_express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ''
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ''
+      ME_CONFIG_MONGODB_SERVER: mongo
+    depends_on:
+      - mongo
+
+  frontend:
+    image: node:18-alpine
+    container_name: cfa_frontend_dev
+    working_dir: /usr/src/app
+    volumes:
+      - ./cfa_digital:/usr/src/app:delegated
+      - /usr/src/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      # point by default to local backend; override with VITE_API_URL in host env or cfa_digital/.env
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
+      - VITE_SOCKET_URL=${VITE_SOCKET_URL:-ws://localhost:5000}
+    command: sh -c "cd /usr/src/app && npm install --silent && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
+
+# Utilisation :
+# - Pour utiliser MongoDB Atlas, exporter MONGO_URI avant `docker-compose up` :
+#   export MONGO_URI="mongodb+srv://user:pass@cluster0.../cfa_digital"
+#   docker-compose up --build
+# - Si MONGO_URI n'est pas fourni, le service `mongo` local sera utilisé.
