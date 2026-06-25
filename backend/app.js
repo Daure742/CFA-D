@@ -50,7 +50,18 @@ app.use('/api/', limiter);
 
 // Routes API
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'cfa-digital-api' });
+  const mongoState = require('mongoose').connection.readyState;
+  const stateNames = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  res.json({
+    status: 'ok',
+    service: 'cfa-digital-api',
+    database: {
+      state: stateNames[mongoState],
+      connected: mongoState === 1,
+      host: require('mongoose').connection.host || 'unknown'
+    },
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use('/api/auth', authRoutes);
