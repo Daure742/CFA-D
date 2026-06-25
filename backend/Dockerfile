@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 COPY package.json package-lock.json* ./
 
 # Installer les dépendances (dev incl.) pour pouvoir utiliser npm run dev
-RUN npm ci --silent
+RUN npm ci
 
 # Copier le reste du projet
 COPY . .
@@ -16,4 +16,4 @@ COPY . .
 EXPOSE 5000
 
 # Commande par défaut (utilisée par le docker-compose dev)
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
