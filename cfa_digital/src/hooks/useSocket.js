@@ -3,9 +3,20 @@ import io from 'socket.io-client';
 import { useAuth } from './useAuth';
 import api from '../services/api';
 
-const getSocketUrl = () =>
-  import.meta.env.VITE_SOCKET_URL ||
-  (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
+const getSocketUrl = () => {
+  const socketUrl = import.meta.env.VITE_SOCKET_URL;
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  if (socketUrl) {
+    return socketUrl;
+  }
+
+  if (apiUrl) {
+    return apiUrl.replace(/\/api\/?$/, '');
+  }
+
+  throw new Error('VITE_SOCKET_URL ou VITE_API_URL doit être défini dans le frontend.');
+};
 
 export function useSocket() {
   const { user } = useAuth();

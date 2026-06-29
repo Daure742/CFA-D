@@ -11,12 +11,19 @@ export default function DiagnosticPanel() {
 
   useEffect(() => {
     const diagnose = async () => {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (!apiUrl) {
+        setStatus({
+          apiUrl: 'undefined',
+          apiHealth: null,
+          loading: false,
+          error: 'VITE_API_URL n est pas défini dans le frontend.',
+        });
+        return;
+      }
+
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        
-        // Test API health
         const response = await api.get('/health');
-        
         setStatus({
           apiUrl,
           apiHealth: response.data,
@@ -24,7 +31,6 @@ export default function DiagnosticPanel() {
           error: null,
         });
       } catch (error) {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         setStatus({
           apiUrl,
           apiHealth: null,

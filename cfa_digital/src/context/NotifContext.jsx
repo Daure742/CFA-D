@@ -15,10 +15,14 @@ export function NotifProvider({ children }) {
       return undefined;
     }
 
-    // Utiliser VITE_SOCKET_URL si disponible, sinon construire à partir de VITE_API_URL
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || 
-                      (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
-    
+    const socketUrl = import.meta.env.VITE_SOCKET_URL ||
+                      (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : null);
+
+    if (!socketUrl) {
+      console.error('VITE_SOCKET_URL ou VITE_API_URL doit être défini pour la connexion Socket.io.');
+      return undefined;
+    }
+
     console.log('🔌 [NotifContext] Connexion Socket.io:', socketUrl);
 
     const newSocket = io(socketUrl, {

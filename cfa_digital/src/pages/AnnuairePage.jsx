@@ -13,7 +13,7 @@ export default function AnnuairePage() {
       try {
         const res = await getAnnuaire();
         setUsers(res.data);
-      } catch (err) {
+      } catch {
         toast.error("Impossible de charger l'annuaire");
       } finally {
         setLoading(false);

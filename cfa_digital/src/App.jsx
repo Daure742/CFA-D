@@ -22,7 +22,6 @@ import EtudiantDevoirs from './pages/etudiant/EtudiantDevoirs';
 import EtudiantDocuments from './pages/etudiant/EtudiantDocuments';
 import EtudiantNotes from './pages/etudiant/EtudiantNotes';
 import EtudiantMessages from './pages/etudiant/EtudiantMessages';
-import EtudiantProfil from './pages/etudiant/EtudiantProfil';
 
 // Pages FORMATEUR
 import FormateurDashboard from './pages/formateur/FormateurDashboard';
@@ -58,6 +57,7 @@ import EntrepriseFactures from './pages/entreprise/EntrepriseFactures';
 import EntrepriseFinancements from './pages/entreprise/EntrepriseFinancements';
 import EntrepriseMessages from './pages/entreprise/EntrepriseMessages';
 import AnnuairePage from './pages/AnnuairePage';
+import ContactPage from './pages/public/ContactPage';
 import MonProfil from './pages/MonProfil';
 
 export default function App() {
@@ -153,6 +153,9 @@ export default function App() {
             <Route path="/annuaire" element={<AnnuairePage />} />
             <Route path="/profil" element={<MonProfil />} />
           </Route>
+
+          {/* Page de contact accessible à tous */}
+          <Route path="/contact" element={<ContactPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

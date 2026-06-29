@@ -64,7 +64,10 @@ async function start() {
   
   console.log(`${colors.cyan}Port Préféré:${colors.reset} 5173`);
   console.log(`${colors.cyan}Mode:${colors.reset} Développement`);
-  console.log(`${colors.cyan}Backend API:${colors.reset} http://localhost:5000/api\n`);
+  const backendApiUrl = process.env.VITE_API_URL || 'http://localhost:5000/api';
+  const socketUrl = process.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
+  console.log(`${colors.cyan}Backend API:${colors.reset} ${backendApiUrl}\n`);
   
   // Vérifier si le port 5173 est disponible
   log.info('Vérification du port 5173...');
@@ -93,8 +96,8 @@ async function start() {
     env: {
       ...process.env,
       VITE_PORT: availablePort,
-      VITE_API_URL: 'http://localhost:5000/api',
-      VITE_SOCKET_URL: 'http://localhost:5000',
+      VITE_API_URL: backendApiUrl,
+      VITE_SOCKET_URL: socketUrl,
     },
   });
   

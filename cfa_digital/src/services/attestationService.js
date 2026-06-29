@@ -1,9 +1,9 @@
-import axios from 'axios';
+import api from './api';
 
 export const getAttestationStatus = (etudiantId, target = 'attestation') => {
-  return axios.get(`/api/attestations/${etudiantId}?target=${encodeURIComponent(target)}`);
+  return api.get(`/attestations/${etudiantId}?target=${encodeURIComponent(target)}`);
 };
 
 export const postAdminDecision = (etudiantId, payload) => {
-  return axios.post(`/api/attestations/${etudiantId}/decision`, payload);
+  return api.post(`/attestations/${etudiantId}/decision`, payload);
 };

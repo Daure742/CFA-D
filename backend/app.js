@@ -5,7 +5,6 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-const connectDB = require('./config/db');
 const { parseCorsOrigins } = require('./config/cors');
 
 // Routes
@@ -27,9 +26,6 @@ const attestationRoutes = require('./routes/attestation.routes');
 const assistantRoutes = require('./routes/assistant.routes');
 
 const app = express();
-
-// Connexion à MongoDB Atlas
-connectDB();
 
 // Middlewares globaux
 app.use(helmet());

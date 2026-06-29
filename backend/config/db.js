@@ -11,8 +11,9 @@ const DigestFetch = (() => {
 const DEFAULT_LOCAL = 'mongodb://127.0.0.1:27017/cfa_digital';
 
 const getUris = () => {
-  // Atlas URI (preferred). Backwards compatibility: fall back to MONGO_URI if set.
-  const atlas = process.env.MONGO_URI_ATLAS?.trim() || process.env.MONGO_URI?.trim();
+  // MONGO_URI is the main connection string and should be used in production.
+  // MONGO_URI_ATLAS is kept for backwards compatibility.
+  const atlas = process.env.MONGO_URI?.trim() || process.env.MONGO_URI_ATLAS?.trim();
   const local = process.env.MONGO_URI_LOCAL?.trim() || process.env.MONGO_LOCAL_URI?.trim();
   return { atlas, local: local || DEFAULT_LOCAL };
 };
@@ -32,57 +33,24 @@ let current = null; // 'atlas' | 'local'
 const connectDB = async () => {
   mongoose.set('strictQuery', false);
   const { atlas, local } = getUris();
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  // If Atlas API credentials are provided, check whether the project's IP access list
-  // contains 0.0.0.0/0 (allow-all). If so, prefer Atlas when possible.
-  const atlasApiPublic = process.env.ATLAS_API_PUBLIC_KEY;
-  const atlasApiPrivate = process.env.ATLAS_API_PRIVATE_KEY;
-  const atlasProjectId = process.env.ATLAS_PROJECT_ID;
-  let atlasForcePreferred = false;
-  if (atlas && atlasApiPublic && atlasApiPrivate && atlasProjectId && DigestFetch) {
-    try {
-      const client = new DigestFetch(atlasApiPublic, atlasApiPrivate);
-      const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${atlasProjectId}/accessList`;
-      const res = await client.fetch(url);
-      if (res && res.ok) {
-        const body = await res.json();
-        const items = body.results || body;
-        const hasOpen = (Array.isArray(items) && items.some(i => (i.cidrBlock === '0.0.0.0/0' || i.ipAddress === '0.0.0.0')));
-        if (hasOpen) {
-          atlasForcePreferred = true;
-          console.log('ℹ️ Atlas IP access list contains 0.0.0.0/0 — preferring Atlas connection');
-        }
-      }
-    } catch (apiErr) {
-      console.warn('⚠️ Unable to query Atlas API for IP access list:', apiErr.message || apiErr);
-    }
+  if (isProduction && !atlas) {
+    console.error('❌ En production, MONGO_URI doit être défini et pointer vers MongoDB Atlas.');
+    process.exit(1);
   }
 
-  // Try Atlas first if configured or explicitly allowed by Atlas IP access list
-  if (atlas && atlasForcePreferred) {
-    // If API says open access, prefer Atlas
+  if (atlas) {
     try {
       const conn = await connectWithOptions(atlas);
       current = 'atlas';
-      console.log(`✅ MongoDB Atlas connecté : ${conn.connection.host}`);
+      console.log(`✅ MongoDB connecté : ${conn.connection.host}`);
     } catch (err) {
-      console.warn(`⚠️ Connexion MongoDB Atlas impossible (${err.message}). Tentative avec MongoDB local...`);
-      try {
-        const conn = await connectWithOptions(local);
-        current = 'local';
-        console.log(`✅ MongoDB connecté (local) : ${conn.connection.host}`);
-      } catch (localErr) {
-        console.error(`❌ Erreur de connexion MongoDB locale : ${localErr.message}`);
+      console.error(`❌ Connexion MongoDB impossible (${err.message})`);
+      if (isProduction) {
         process.exit(1);
       }
-    }
-  } else if (atlas) {
-    try {
-      const conn = await connectWithOptions(atlas);
-      current = 'atlas';
-      console.log(`✅ MongoDB Atlas connecté : ${conn.connection.host}`);
-    } catch (err) {
-      console.warn(`⚠️ Connexion MongoDB Atlas impossible (${err.message}). Tentative avec MongoDB local...`);
+      console.warn('⚠️ Tentative de connexion à MongoDB local...');
       try {
         const conn = await connectWithOptions(local);
         current = 'local';

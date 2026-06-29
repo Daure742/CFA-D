@@ -3,6 +3,7 @@ const app = require('./app');
 const http = require('http');
 const { Server } = require('socket.io');
 const socketHandler = require('./socket/socketHandler');
+const connectDB = require('./config/db');
 const { parseCorsOrigins } = require('./config/cors');
 
 const BASE_PORT = Number(process.env.PORT) || 5000;
@@ -35,10 +36,8 @@ const startServer = (port) => {
   server.on('error', (err) => {
     if (err && err.code === 'EADDRINUSE') {
       console.warn(`⚠️ Port ${port} déjà utilisé. Tentative sur ${port + 1}...`);
-      // Try one fallback port to avoid infinite loops
       const fallback = port + 1;
       server.removeAllListeners('error');
-      // Close any active handle and try fallback
       server.listen(fallback, () => {
         console.log(`🚀 Serveur LMS CFA démarré sur le port ${fallback}`);
       });
@@ -49,7 +48,16 @@ const startServer = (port) => {
   });
 };
 
-startServer(BASE_PORT);
+(async () => {
+  try {
+    await connectDB();
+    startServer(BASE_PORT);
+  } catch (err) {
+    console.error('❌ Impossible de démarrer le backend sans connexion MongoDB.', err);
+    process.exit(1);
+  }
+})();
+
 // Start replay cleanup scheduler
 try {
   const { scheduleCleanup } = require('./utils/cleanupReplays');
