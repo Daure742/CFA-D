@@ -64,8 +64,13 @@ async function start() {
   
   console.log(`${colors.cyan}Port Préféré:${colors.reset} 5173`);
   console.log(`${colors.cyan}Mode:${colors.reset} Développement`);
-  const backendApiUrl = process.env.VITE_API_URL || 'http://localhost:5000/api';
-  const socketUrl = process.env.VITE_SOCKET_URL || 'http://localhost:5000';
+  const backendApiUrl = process.env.VITE_API_URL || process.env.API_URL;
+  const socketUrl = process.env.VITE_SOCKET_URL || process.env.SOCKET_URL;
+
+  if (!backendApiUrl || !socketUrl) {
+    log.error('VITE_API_URL et VITE_SOCKET_URL doivent être définis dans l environnement.');
+    process.exit(1);
+  }
 
   console.log(`${colors.cyan}Backend API:${colors.reset} ${backendApiUrl}\n`);
   

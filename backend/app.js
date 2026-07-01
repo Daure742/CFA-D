@@ -28,14 +28,15 @@ const assistantRoutes = require('./routes/assistant.routes');
 const app = express();
 
 app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
 
 app.use(helmet());
-// Middlewares globaux
-app.use(helmet());
-const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -43,7 +44,10 @@ app.use(cookieParser());
 // Limitation du nombre de requêtes (anti-force brute)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // maximum 100 requêtes par IP
+  max: 100, // maximum 100 requêtes par IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: 1
 });
 app.use('/api/', limiter);
 
@@ -80,10 +84,21 @@ app.use('/api/schedules', scheduleRoutes);
 app.use('/api/attestations', attestationRoutes);
 app.use('/api/assistant', assistantRoutes);
 
-// Gestion d'erreur globale
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Route introuvable'
+  });
+});
+
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(err.stack || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+
   res.status(err.status || 500).json({
+    status: 'error',
     message: err.message || 'Erreur interne du serveur',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });

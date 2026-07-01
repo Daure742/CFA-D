@@ -8,6 +8,18 @@ const { parseCorsOrigins } = require('./config/cors');
 
 const BASE_PORT = Number(process.env.PORT) || 5000;
 
+const handleFatalError = (error) => {
+  console.error('❌ Erreur système non gérée :', error);
+  process.exit(1);
+};
+
+process.on('uncaughtException', handleFatalError);
+process.on('unhandledRejection', handleFatalError);
+process.on('SIGTERM', () => {
+  console.log('⚠️ SIGTERM reçu, arrêt propre du serveur');
+  process.exit(0);
+});
+
 const server = http.createServer(app);
 const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
 
@@ -29,8 +41,8 @@ try {
 }
 
 const startServer = (port) => {
-  server.listen(port, () => {
-    console.log(`🚀 Serveur LMS CFA démarré sur le port ${port}`);
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Serveur LMS CFA démarré sur le port ${port} (0.0.0.0)`);
   });
 
   server.on('error', (err) => {
@@ -38,8 +50,8 @@ const startServer = (port) => {
       console.warn(`⚠️ Port ${port} déjà utilisé. Tentative sur ${port + 1}...`);
       const fallback = port + 1;
       server.removeAllListeners('error');
-      server.listen(fallback, () => {
-        console.log(`🚀 Serveur LMS CFA démarré sur le port ${fallback}`);
+      server.listen(fallback, '0.0.0.0', () => {
+        console.log(`🚀 Serveur LMS CFA démarré sur le port ${fallback} (0.0.0.0)`);
       });
     } else {
       console.error('Erreur serveur non gérée :', err);

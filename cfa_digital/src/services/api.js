@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL ;
+const baseURL = import.meta.env.VITE_API_URL;
+if (!baseURL) {
+  throw new Error('VITE_API_URL doit être défini dans le frontend.');
+}
+
 const isDebug = import.meta.env.VITE_API_DEBUG === 'true';
 
 if (isDebug) {
