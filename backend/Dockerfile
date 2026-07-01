@@ -13,7 +13,7 @@ RUN npm ci --omit=dev --silent
 COPY . .
 
 # Exposer le port configuré par Render via PORT
-EXPOSE 1000
+EXPOSE 5000
 
 # Commande par défaut pour la production
 CMD ["npm", "start"]
