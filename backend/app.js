@@ -27,6 +27,9 @@ const assistantRoutes = require('./routes/assistant.routes');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
+app.use(helmet());
 // Middlewares globaux
 app.use(helmet());
 const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
