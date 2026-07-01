@@ -1,4 +1,10 @@
 // server.js - Point d'entrée du serveur Node.js
+if (!globalThis.crypto) {
+  globalThis.crypto = require('crypto');
+}
+if (!global.crypto) {
+  global.crypto = globalThis.crypto;
+}
 const app = require('./app');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -17,6 +23,10 @@ process.on('uncaughtException', handleFatalError);
 process.on('unhandledRejection', handleFatalError);
 process.on('SIGTERM', () => {
   console.log('⚠️ SIGTERM reçu, arrêt propre du serveur');
+  process.exit(0);
+});
+process.on('SIGINT', () => {
+  console.log('⚠️ SIGINT reçu, arrêt propre du serveur');
   process.exit(0);
 });
 
@@ -64,17 +74,17 @@ const startServer = (port) => {
   try {
     await connectDB();
     startServer(BASE_PORT);
+
+    try {
+      const { scheduleCleanup } = require('./utils/cleanupReplays');
+      scheduleCleanup({ intervalMs: 5 * 60 * 1000 }); // every 5 minutes
+      console.log('🧰 Scheduled replay cleanup job (5min)');
+    } catch (err) {
+      console.warn('⚠️ Impossible de démarrer le cleanup des replays:', err.message);
+    }
   } catch (err) {
     console.error('❌ Impossible de démarrer le backend sans connexion MongoDB.', err);
     process.exit(1);
   }
 })();
 
-// Start replay cleanup scheduler
-try {
-  const { scheduleCleanup } = require('./utils/cleanupReplays');
-  scheduleCleanup({ intervalMs: 5 * 60 * 1000 }); // every 5 minutes
-  console.log('🧰 Scheduled replay cleanup job (5min)');
-} catch (err) {
-  console.warn('⚠️ Impossible de démarrer le cleanup des replays:', err.message);
-}

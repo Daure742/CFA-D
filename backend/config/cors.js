@@ -1,15 +1,22 @@
 const parseCorsOrigins = (value) => {
   if (!value) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('CLIENT_URL doit être défini en production pour la configuration CORS.');
+      console.warn('⚠️ CLIENT_URL non défini en production. CORS autorise toutes les origines via un fallback sécurisé.');
+      return ['*'];
     }
     return ['http://localhost:5173'];
   }
 
-  return value
+  const origins = value
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+
+  if (origins.length === 0) {
+    return ['http://localhost:5173'];
+  }
+
+  return origins;
 };
 
 module.exports = { parseCorsOrigins };

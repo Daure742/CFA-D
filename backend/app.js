@@ -34,7 +34,17 @@ const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
 
 app.use(helmet());
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS origin non autorisé: ${origin}`), false);
+  },
   credentials: true,
   optionsSuccessStatus: 200
 }));

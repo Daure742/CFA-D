@@ -22,6 +22,8 @@ const connectDB = async () => {
   const serverSelectionTimeoutMS = parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS, 10) || 5000;
   const connectTimeoutMS = parseInt(process.env.MONGO_CONNECT_TIMEOUT_MS, 10) || 10000;
   const maxPoolSize = parseInt(process.env.MONGO_MAX_POOL_SIZE, 10) || 10;
+  const retryDelayMs = parseInt(process.env.MONGO_RETRY_DELAY_MS, 10) || 5000;
+  const maxRetries = parseInt(process.env.MONGO_RETRY_COUNT, 10) || 5;
 
   const options = {
     serverSelectionTimeoutMS,
@@ -30,11 +32,30 @@ const connectDB = async () => {
     family: 4,
   };
 
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const connectWithRetry = async () => {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      attempt += 1;
+      try {
+        const connection = await mongoose.connect(finalUri, options);
+        console.log(`✅ MongoDB connecté : ${connection.connection.host}`);
+        return connection;
+      } catch (error) {
+        console.warn(`⚠️ Tentative ${attempt}/${maxRetries} de connexion MongoDB échouée : ${error.message}`);
+        if (attempt >= maxRetries) {
+          throw error;
+        }
+        await wait(retryDelayMs);
+      }
+    }
+  };
+
   try {
-    const connection = await mongoose.connect(finalUri, options);
-    console.log(`✅ MongoDB connecté : ${connection.connection.host}`);
+    await connectWithRetry();
   } catch (err) {
     console.error('❌ Connexion MongoDB impossible :', err.message);
+    console.error(err.stack || err);
     process.exit(1);
   }
 

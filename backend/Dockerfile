@@ -3,6 +3,9 @@ FROM node:18-alpine
 # Répertoire de travail
 WORKDIR /usr/src/app
 
+# Définir l'environnement de production pour Render
+ENV NODE_ENV=production
+
 # Copier les manifestes en premier pour profiter du cache Docker
 COPY package.json package-lock.json* ./
 
