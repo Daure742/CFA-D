@@ -1,10 +1,10 @@
-// app.js - Configuration Express de la plateforme CFA
+// app.js - configuration Express de la plateforme CFA
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const mongoose = require('mongoose');
 const { parseCorsOrigins } = require('./config/cors');
 
 // Routes
@@ -27,8 +27,6 @@ const assistantRoutes = require('./routes/assistant.routes');
 
 const app = express();
 
-// Trust the upstream proxy (Render/Vercel/Cloud) so Express uses X-Forwarded-* headers
-// For Render, set to 1 to trust the first proxy in the chain
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
@@ -53,31 +51,37 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Limitation du nombre de requêtes (anti-force brute)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // maximum 100 requêtes par IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
-  legacyHeaders: false,
-  // Do not set `trustProxy` here; Express app trust proxy is configured above
+  legacyHeaders: false
 });
 app.use('/api/', limiter);
 
-// Routes API
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({
+    status: 'ok',
+    uptime: process.uptime()
+  });
 });
 
 app.get('/api/health', (req, res) => {
-  const mongoState = require('mongoose').connection.readyState;
-  const stateNames = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  const mongoState = mongoose.connection.readyState;
+  const stateNames = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+
   res.json({
     status: 'ok',
-    service: 'cfa-digital-api',
+    uptime: process.uptime(),
     database: {
       state: stateNames[mongoState],
       connected: mongoState === 1,
-      host: require('mongoose').connection.host || 'unknown'
+      host: mongoose.connection.host || 'unknown'
     },
     timestamp: new Date().toISOString()
   });
@@ -105,14 +109,12 @@ app.use('/api/attestations', attestationRoutes);
 app.use('/api/assistant', assistantRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Route introuvable'
-  });
+  res.status(404).json({ status: 'error', message: 'Route introuvable' });
 });
 
 app.use((err, req, res, next) => {
   console.error(err.stack || err);
+
   if (res.headersSent) {
     return next(err);
   }

@@ -1,18 +1,16 @@
-// config/db.js - Connexion à MongoDB Atlas
+// config/db.js - connexion sécurisée vers MongoDB Atlas
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
   mongoose.set('strictQuery', false);
+  mongoose.set('bufferCommands', false);
 
-  // Require MONGO_URI explicitly in production. No local fallback.
   const uri = (process.env.MONGO_URI || '').trim();
 
   if (!uri) {
-    console.error('❌ MONGO_URI est requis et doit pointer vers MongoDB Atlas. Le serveur démarre quand même en mode dégradé.');
+    console.warn('⚠️ MONGO_URI manquant. Le serveur démarre en mode dégradé, mais MongoDB ne sera pas connecté.');
     return;
   }
-
-  const finalUri = uri;
 
   const serverSelectionTimeoutMS = parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS, 10) || 5000;
   const connectTimeoutMS = parseInt(process.env.MONGO_CONNECT_TIMEOUT_MS, 10) || 10000;
@@ -25,20 +23,19 @@ const connectDB = async () => {
     connectTimeoutMS,
     maxPoolSize,
     family: 4,
+    autoIndex: false
   };
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const connectWithRetry = async () => {
-    let attempt = 0;
-    while (attempt < maxRetries) {
-      attempt += 1;
+    for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
       try {
-        const connection = await mongoose.connect(finalUri, options);
+        const connection = await mongoose.connect(uri, options);
         console.log(`✅ MongoDB connecté : ${connection.connection.host}`);
         return connection;
       } catch (error) {
-        console.warn(`⚠️ Tentative ${attempt}/${maxRetries} de connexion MongoDB échouée : ${error.message}`);
-        if (attempt >= maxRetries) {
+        console.warn(`⚠️ MongoDB tentative ${attempt}/${maxRetries} échouée : ${error.message}`);
+        if (attempt === maxRetries) {
           throw error;
         }
         await wait(retryDelayMs);
@@ -49,8 +46,7 @@ const connectDB = async () => {
   try {
     await connectWithRetry();
   } catch (err) {
-    console.error('❌ Connexion MongoDB impossible :', err.message);
-    console.error(err.stack || err);
+    console.error('❌ Connexion MongoDB impossible après plusieurs tentatives :', err.message || err);
     console.warn('⚠️ Le serveur continue de démarrer, mais MongoDB n est pas connecté.');
     return;
   }
@@ -60,7 +56,7 @@ const connectDB = async () => {
   });
 
   mongoose.connection.on('reconnected', () => {
-    console.log('✅ MongoDB reconnected.');
+    console.log('✅ MongoDB reconnecté.');
   });
 
   mongoose.connection.on('error', (err) => {
