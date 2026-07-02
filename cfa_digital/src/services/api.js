@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL;
-if (!baseURL) {
-  throw new Error('VITE_API_URL doit être défini dans le frontend.');
-}
-
+const DEFAULT_API = 'https://cfa-backend-vtex.onrender.com/api';
+const baseURL = import.meta.env.VITE_API_URL || DEFAULT_API;
 const isDebug = import.meta.env.VITE_API_DEBUG === 'true';
 
 if (isDebug) {

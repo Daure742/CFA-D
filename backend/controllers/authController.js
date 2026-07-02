@@ -360,7 +360,9 @@ exports.login = async (req, res, next) => {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict',
+      // In production frontend (Vercel) and backend (Render) are on different origins,
+      // so we must set SameSite=None to allow the browser to send the cookie cross-site.
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 jours
     });
 
@@ -423,7 +425,13 @@ exports.logout = async (req, res, next) => {
       user.refreshToken = null;
       await user.save();
     }
-    res.clearCookie('refreshToken');
+    // Clear cookie with same attributes to ensure browser removes it
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      path: '/'
+    });
     res.json({ message: 'Déconnexion réussie' });
   } catch (error) {
     next(error);

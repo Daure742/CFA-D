@@ -42,10 +42,13 @@ const initSocketIO = () => {
     const io = new Server(server, {
       cors: {
         origin: allowedOrigins,
-        methods: ['GET', 'POST']
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Authorization', 'Content-Type', 'Accept', 'Origin', 'Cookie']
       },
       pingTimeout: 30000,
-      maxHttpBufferSize: 1e6
+      maxHttpBufferSize: 1e6,
+      transports: ['websocket', 'polling']
     });
 
     socketHandler(io);
