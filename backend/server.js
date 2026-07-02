@@ -1,9 +1,16 @@
 // server.js - Point d'entrée du serveur Node.js
-if (!globalThis.crypto) {
-  globalThis.crypto = require('crypto');
-}
-if (!global.crypto) {
-  global.crypto = globalThis.crypto;
+// Ensure a Node.js crypto implementation is available on globalThis/global
+try {
+  if (!globalThis.crypto) {
+    // use Node's built-in crypto (CommonJS)
+    globalThis.crypto = require('crypto');
+  }
+  if (!global.crypto) {
+    global.crypto = globalThis.crypto;
+  }
+} catch (err) {
+  // Defensive: log but don't crash here; other modules should `require('crypto')` directly
+  console.warn('⚠️ Impossible d initialiser global crypto:', err && err.message ? err.message : err);
 }
 const app = require('./app');
 const http = require('http');

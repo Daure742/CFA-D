@@ -10,7 +10,11 @@ let vectorStore = null;
 try { vectorStore = require('../services/vectorStore'); } catch (e) { /* optional */ }
 
 async function connectDB() {
-  const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/cfa';
+  const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+  if (!uri) {
+    console.error('MONGO_URI (Atlas) is required to run indexContent.js');
+    process.exit(1);
+  }
   await mongoose.connect(uri, { dbName: process.env.MONGO_DBNAME || undefined });
 }
 

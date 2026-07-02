@@ -9,8 +9,9 @@ const app = require('../app');
 describe('Assistant RAG pipeline', function() {
   this.timeout(60000);
   before(async () => {
-    // ensure test DB
-    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/cfa_test';
+    // ensure test DB - require MONGO_URI (Atlas)
+    const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    if (!uri) throw new Error('MONGO_URI is required for tests and must point to MongoDB Atlas');
     await mongoose.connect(uri, {});
     // seed data
     const seed = require(path.join(__dirname, '..', 'scripts', 'seedAssistantTestData'));

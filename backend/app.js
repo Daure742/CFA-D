@@ -27,6 +27,8 @@ const assistantRoutes = require('./routes/assistant.routes');
 
 const app = express();
 
+// Trust the upstream proxy (Render/Vercel/Cloud) so Express uses X-Forwarded-* headers
+// For Render, set to 1 to trust the first proxy in the chain
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
@@ -57,7 +59,7 @@ const limiter = rateLimit({
   max: 100, // maximum 100 requêtes par IP
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: 1
+  // Do not set `trustProxy` here; Express app trust proxy is configured above
 });
 app.use('/api/', limiter);
 
@@ -75,6 +77,10 @@ app.get('/api/health', (req, res) => {
     },
     timestamp: new Date().toISOString()
   });
+});
+
+app.get('/api', (req, res) => {
+  res.json({ status: 'ok', service: 'cfa-digital-api' });
 });
 
 app.use('/api/auth', authRoutes);

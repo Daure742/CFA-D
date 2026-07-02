@@ -1,6 +1,12 @@
 // controllers/authController.js - Authentification (login, refresh, forgot pwd)
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+// Ensure a usable crypto implementation is referenced locally (prefer require)
+let cryptoLib;
+try {
+  cryptoLib = require('crypto');
+} catch (e) {
+  cryptoLib = (typeof globalThis !== 'undefined' && globalThis.crypto) || (typeof global !== 'undefined' && global.crypto) || null;
+}
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const CFA = require('../models/CFA');
@@ -431,7 +437,7 @@ exports.forgotPassword = async (req, res, next) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'Aucun compte avec cet email' });
 
-    const token = crypto.randomBytes(20).toString('hex');
+    const token = (cryptoLib && cryptoLib.randomBytes ? cryptoLib.randomBytes(20).toString('hex') : require('crypto').randomBytes(20).toString('hex'));
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 heure
     await user.save();

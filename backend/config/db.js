@@ -4,20 +4,15 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   mongoose.set('strictQuery', false);
 
+  // Always require an Atlas connection string. Local MongoDB fallbacks are not allowed.
   const uri = (process.env.MONGO_URI || process.env.MONGO_URI_ATLAS || process.env.MONGODB_URI || '').trim();
-  const explicitLocalUri = (process.env.MONGO_URI_LOCAL || process.env.MONGO_LOCAL_URI || '').trim();
-  const finalUri = uri || explicitLocalUri;
-  const isProduction = process.env.NODE_ENV === 'production';
 
-  if (!finalUri) {
-    console.error('❌ MONGO_URI est requis. Définissez MONGO_URI ou MONGO_URI_ATLAS dans vos variables d environnement.');
+  if (!uri) {
+    console.error('❌ MONGO_URI / MONGODB_URI est requis et doit pointer vers MongoDB Atlas.');
     process.exit(1);
   }
 
-  if (isProduction && !uri) {
-    console.error('❌ En production, MONGO_URI doit pointer vers MongoDB Atlas.');
-    process.exit(1);
-  }
+  const finalUri = uri;
 
   const serverSelectionTimeoutMS = parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS, 10) || 5000;
   const connectTimeoutMS = parseInt(process.env.MONGO_CONNECT_TIMEOUT_MS, 10) || 10000;
