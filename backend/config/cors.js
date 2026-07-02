@@ -4,7 +4,8 @@ const parseCorsOrigins = (value) => {
       console.error('❌ CLIENT_URL non défini en production. Définissez CLIENT_URL avec l origine de Vercel.');
       return [];
     }
-    return ['http://localhost:5173'];
+    // Development: require explicit env var for localhost
+    return process.env.DEV_LOCALHOST === 'true' ? ['http://localhost:5173'] : [];
   }
 
   const origins = value
@@ -12,7 +13,7 @@ const parseCorsOrigins = (value) => {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  return origins.length > 0 ? origins : ['http://localhost:5173'];
+  return origins.length > 0 ? origins : [];
 };
 
 const createCorsOptions = (allowedOrigins = []) => ({

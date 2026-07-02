@@ -116,7 +116,8 @@ exports.getAttestationStatus = async (req, res) => {
           const sendPromises = admins.map((a) => {
             const to = a.email;
             const subject = titre;
-            const text = `${message}\n\nConsultez le dossier: ${process.env.CLIENT_URL || 'http://localhost:5173'}/admin/etudiants/${etudiantId}`;
+            const clientUrl = process.env.CLIENT_URL || 'https://plateforme-cfa.vercel.app';
+            const text = `${message}\n\nConsultez le dossier: ${clientUrl}/admin/etudiants/${etudiantId}`;
             return transporter.sendMail({ from: process.env.MAIL_FROM || 'no-reply@cfa-digital.local', to, subject, text });
           });
           await Promise.all(sendPromises);
@@ -180,7 +181,8 @@ exports.postAdminDecision = async (req, res) => {
       const transporter = require('../config/mailer');
       const to = student.email;
       const subject = notif.titre;
-      const text = `${notif.message}\n\nConsultez votre dossier: ${process.env.CLIENT_URL || 'http://localhost:5173'}/etudiant/mon-profil`;
+      const clientUrl = process.env.CLIENT_URL || 'https://plateforme-cfa.vercel.app';
+      const text = `${notif.message}\n\nConsultez votre dossier: ${clientUrl}/etudiant/mon-profil`;
       await transporter.sendMail({ from: process.env.MAIL_FROM || 'no-reply@cfa-digital.local', to, subject, text });
     } catch (emailErr) {
       console.error('Erreur envoi email décision au étudiant:', emailErr);

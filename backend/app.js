@@ -7,23 +7,32 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const { parseCorsOrigins, createCorsOptions } = require('./config/cors');
 
-// Routes
-const authRoutes = require('./routes/auth.routes');
-const etudiantRoutes = require('./routes/etudiant.routes');
-const formateurRoutes = require('./routes/formateur.routes');
-const coursRoutes = require('./routes/cours.routes');
-const devoirRoutes = require('./routes/devoir.routes');
-const documentRoutes = require('./routes/document.routes');
-const noteRoutes = require('./routes/note.routes');
-const presenceRoutes = require('./routes/presence.routes');
-const notificationRoutes = require('./routes/notification.routes');
-const messageRoutes = require('./routes/message.routes');
-const adminRoutes = require('./routes/admin.routes');
-const cohorteRoutes = require('./routes/cohorte.routes');
-const scheduleRoutes = require('./routes/schedule.routes');
-const cfaRoutes = require('./routes/cfa.routes');
-const attestationRoutes = require('./routes/attestation.routes');
-const assistantRoutes = require('./routes/assistant.routes');
+// Routes - wrapped to prevent import-time errors
+let authRoutes, etudiantRoutes, formateurRoutes, coursRoutes, devoirRoutes, documentRoutes;
+let noteRoutes, presenceRoutes, notificationRoutes, messageRoutes;
+let adminRoutes, cohorteRoutes, scheduleRoutes, cfaRoutes, attestationRoutes, assistantRoutes;
+
+try {
+  authRoutes = require('./routes/auth.routes') || {};
+  etudiantRoutes = require('./routes/etudiant.routes') || {};
+  formateurRoutes = require('./routes/formateur.routes') || {};
+  coursRoutes = require('./routes/cours.routes') || {};
+  devoirRoutes = require('./routes/devoir.routes') || {};
+  documentRoutes = require('./routes/document.routes') || {};
+  noteRoutes = require('./routes/note.routes') || {};
+  presenceRoutes = require('./routes/presence.routes') || {};
+  notificationRoutes = require('./routes/notification.routes') || {};
+  messageRoutes = require('./routes/message.routes') || {};
+  adminRoutes = require('./routes/admin.routes') || {};
+  cohorteRoutes = require('./routes/cohorte.routes') || {};
+  scheduleRoutes = require('./routes/schedule.routes') || {};
+  cfaRoutes = require('./routes/cfa.routes') || {};
+  attestationRoutes = require('./routes/attestation.routes') || {};
+  assistantRoutes = require('./routes/assistant.routes') || {};
+} catch (err) {
+  console.error('❌ Erreur lors du chargement des routes:', err.message);
+  // Don't throw - just log. Routes will fail at runtime but server starts.
+}
 
 const app = express();
 

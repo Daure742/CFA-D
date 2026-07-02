@@ -18,19 +18,32 @@ const app = require('./app');
 const connectDB = require('./config/db');
 const { parseCorsOrigins } = require('./config/cors');
 
+// CRITICAL: Port must come from Render/environment
 const PORT = (() => {
-  const raw = process.env.PORT;
+  // On Render, PORT is ALWAYS provided via environment
+  const raw = process.env.PORT || process.env.RENDER_PORT;
+  
   if (!raw) {
-    console.warn('⚠️ Aucune variable PORT fournie. Démarrage local sur 3000.');
-    return 3000;
+    // If running locally without PORT, use 5000 for development
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ PORT non fourni. Développement local sur 5000.');
+      return 5000;
+    }
+    // In production, PORT is REQUIRED
+    console.error('❌ CRITICAL: PORT environment variable is required in production.');
+    process.exit(1);
   }
+  
   const parsed = Number(raw);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    console.warn(`⚠️ PORT invalide (${raw}). Démarrage local sur 3000.`);
-    return 3000;
+    console.error(`❌ CRITICAL: PORT invalide (${raw}). Exiting.`);
+    process.exit(1);
   }
+  
   return parsed;
 })();
+
+console.log(`📍 Serveur se liera au port: ${PORT} on 0.0.0.0`);
 
 const server = http.createServer(app);
 const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
@@ -75,19 +88,17 @@ const io = initSocketIO();
 const startServer = (port) => {
   server.listen(port, '0.0.0.0', () => {
     console.log(`🚀 Serveur CFA démarré sur 0.0.0.0:${port}`);
+    console.log('✅ Port ouvert - Render port scan devrait réussir');
   });
 
   server.on('error', (err) => {
     if (err && err.code === 'EADDRINUSE') {
-      console.warn(`⚠️ Port ${port} occupé. Tentative sur ${port + 1}...`);
-      server.removeAllListeners('error');
-      server.listen(port + 1, '0.0.0.0', () => {
-        console.log(`🚀 Serveur CFA démarré sur 0.0.0.0:${port + 1}`);
-      });
-      return;
+      console.error(`❌ Port ${port} déjà utilisé. Impossible de continuer.`);
+      process.exit(1);
     }
 
-    console.error('💥 Erreur serveur non gérée :', err);
+    console.error('💥 Erreur serveur critique :', err);
+    process.exit(1);
   });
 };
 
@@ -107,28 +118,41 @@ const gracefulShutdown = () => {
   });
 };
 
+// Setup error handlers BEFORE any startup code
 process.on('uncaughtException', (error) => {
   console.error('💥 uncaughtException capturée :', error);
+  console.error('⚠️ Serveur continue malgré l\'erreur (mode dégradé)');
 });
 
 process.on('unhandledRejection', (reason) => {
   console.error('💥 unhandledRejection capturée :', reason);
+  console.error('⚠️ Serveur continue malgré l\'erreur (mode dégradé)');
 });
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
+// CRITICAL: START SERVER FIRST
+// This ensures Render detects open port immediately
 startServer(PORT);
 
-connectDB().catch((err) => {
-  console.warn('⚠️ Erreur asynchrone lors de l initialisation MongoDB :', err && err.message ? err.message : err);
+// ASYNC tasks run AFTER server is listening
+setImmediate(async () => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.warn('⚠️ Erreur asynchrone lors de l initialisation MongoDB :', err && err.message ? err.message : err);
+  }
 });
 
-try {
-  const { scheduleCleanup } = require('./utils/cleanupReplays');
-  scheduleCleanup({ intervalMs: 5 * 60 * 1000 });
-  console.log('🧰 Tâche de nettoyage des replays planifiée (5 min)');
-} catch (err) {
-  console.warn('⚠️ Impossible de planifier le nettoyage des replays :', err && err.message ? err.message : err);
-}
+// Schedule cleanup tasks
+setImmediate(() => {
+  try {
+    const { scheduleCleanup } = require('./utils/cleanupReplays');
+    scheduleCleanup({ intervalMs: 5 * 60 * 1000 });
+    console.log('🧰 Tâche de nettoyage des replays planifiée (5 min)');
+  } catch (err) {
+    console.warn('⚠️ Impossible de planifier le nettoyage des replays :', err && err.message ? err.message : err);
+  }
+});
 
