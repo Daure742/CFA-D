@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
-const { parseCorsOrigins } = require('./config/cors');
+const { parseCorsOrigins, createCorsOptions } = require('./config/cors');
 
 // Routes
 const authRoutes = require('./routes/auth.routes');
@@ -31,23 +31,15 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
 const allowedOrigins = parseCorsOrigins(process.env.CLIENT_URL);
+const corsOptions = createCorsOptions(allowedOrigins);
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.error('❌ CLIENT_URL absent. En production sur Render, le backend doit connaître l origine du frontend.');
+}
 
 app.use(helmet());
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`CORS origin non autorisé: ${origin}`), false);
-  },
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://cfa-backend-vtex.onrender.com/api/:path*"
+    }
+  ]
+}

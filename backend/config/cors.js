@@ -1,8 +1,8 @@
 const parseCorsOrigins = (value) => {
   if (!value) {
     if (process.env.NODE_ENV === 'production') {
-      console.warn('⚠️ CLIENT_URL non défini en production. CORS autorise toutes les origines via un fallback sécurisé.');
-      return ['*'];
+      console.error('❌ CLIENT_URL non défini en production. Définissez CLIENT_URL avec l origine de Vercel.');
+      return [];
     }
     return ['http://localhost:5173'];
   }
@@ -12,11 +12,30 @@ const parseCorsOrigins = (value) => {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  if (origins.length === 0) {
-    return ['http://localhost:5173'];
-  }
-
-  return origins;
+  return origins.length > 0 ? origins : ['http://localhost:5173'];
 };
 
-module.exports = { parseCorsOrigins };
+const createCorsOptions = (allowedOrigins = []) => ({
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS origin non autorisée : ${origin}`), false);
+  },
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin', 'Cookie'],
+  exposedHeaders: ['Authorization'],
+  optionsSuccessStatus: 204,
+});
+
+module.exports = { parseCorsOrigins, createCorsOptions };
