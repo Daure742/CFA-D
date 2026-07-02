@@ -19,7 +19,7 @@ const socketHandler = require('./socket/socketHandler');
 const connectDB = require('./config/db');
 const { parseCorsOrigins } = require('./config/cors');
 
-const BASE_PORT = Number(process.env.PORT) || 5000;
+const BASE_PORT = Number(process.env.PORT) || 3000;
 
 const handleFatalError = (error) => {
   console.error('❌ Erreur système non gérée :', error);

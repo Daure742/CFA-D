@@ -9,7 +9,7 @@
     console.error('BASE_URL or DEPLOY_URL environment variable is required for post-deploy check.');
     process.exit(1);
   }
-  const endpoints = ['/api/health', '/api/auth', '/api/users'];
+  const endpoints = ['/health', '/api/health', '/api/auth', '/api/users'];
   let allOk = true;
 
   for (const ep of endpoints) {

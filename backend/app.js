@@ -64,6 +64,10 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Routes API
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get('/api/health', (req, res) => {
   const mongoState = require('mongoose').connection.readyState;
   const stateNames = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };

@@ -4,11 +4,11 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   mongoose.set('strictQuery', false);
 
-  // Always require an Atlas connection string. Local MongoDB fallbacks are not allowed.
-  const uri = (process.env.MONGO_URI || process.env.MONGO_URI_ATLAS || process.env.MONGODB_URI || '').trim();
+  // Require MONGO_URI explicitly in production. No local fallback.
+  const uri = (process.env.MONGO_URI || '').trim();
 
   if (!uri) {
-    console.error('❌ MONGO_URI / MONGODB_URI est requis et doit pointer vers MongoDB Atlas.');
+    console.error('❌ MONGO_URI est requis et doit pointer vers MongoDB Atlas.');
     process.exit(1);
   }
 
