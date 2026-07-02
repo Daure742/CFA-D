@@ -8,8 +8,8 @@ const connectDB = async () => {
   const uri = (process.env.MONGO_URI || '').trim();
 
   if (!uri) {
-    console.error('❌ MONGO_URI est requis et doit pointer vers MongoDB Atlas.');
-    process.exit(1);
+    console.error('❌ MONGO_URI est requis et doit pointer vers MongoDB Atlas. Le serveur démarre quand même en mode dégradé.');
+    return;
   }
 
   const finalUri = uri;
@@ -51,7 +51,8 @@ const connectDB = async () => {
   } catch (err) {
     console.error('❌ Connexion MongoDB impossible :', err.message);
     console.error(err.stack || err);
-    process.exit(1);
+    console.warn('⚠️ Le serveur continue de démarrer, mais MongoDB n est pas connecté.');
+    return;
   }
 
   mongoose.connection.on('disconnected', () => {

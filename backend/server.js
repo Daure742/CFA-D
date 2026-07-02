@@ -78,20 +78,18 @@ const startServer = (port) => {
 };
 
 (async () => {
-  try {
-    await connectDB();
-    startServer(BASE_PORT);
+  await connectDB().catch((err) => {
+    console.error('❌ Erreur lors de la connexion MongoDB :', err.message || err);
+  });
 
-    try {
-      const { scheduleCleanup } = require('./utils/cleanupReplays');
-      scheduleCleanup({ intervalMs: 5 * 60 * 1000 }); // every 5 minutes
-      console.log('🧰 Scheduled replay cleanup job (5min)');
-    } catch (err) {
-      console.warn('⚠️ Impossible de démarrer le cleanup des replays:', err.message);
-    }
+  startServer(BASE_PORT);
+
+  try {
+    const { scheduleCleanup } = require('./utils/cleanupReplays');
+    scheduleCleanup({ intervalMs: 5 * 60 * 1000 }); // every 5 minutes
+    console.log('🧰 Scheduled replay cleanup job (5min)');
   } catch (err) {
-    console.error('❌ Impossible de démarrer le backend sans connexion MongoDB.', err);
-    process.exit(1);
+    console.warn('⚠️ Impossible de démarrer le cleanup des replays:', err.message);
   }
 })();
 
