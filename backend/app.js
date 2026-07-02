@@ -48,7 +48,8 @@ if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
 
 app.use(helmet());
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+console.log('STEP 2: Express app configured - registering CORS options endpoint.');
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 

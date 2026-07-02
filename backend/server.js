@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+console.log('STEP 1: server.js démarrage - configuration du serveur');
+
 // Ensure Node.js crypto exists on globalThis/global for modules or libraries that expect a browser-like API.
 try {
   if (!globalThis.crypto) {
@@ -15,6 +17,7 @@ try {
 // server.js - point d'entrée de l'application, gestion du boot et du serveur
 const http = require('http');
 const app = require('./app');
+console.log('STEP 2: app.js importé avec succès');
 const connectDB = require('./config/db');
 const { parseCorsOrigins } = require('./config/cors');
 
@@ -86,7 +89,9 @@ const initSocketIO = () => {
 const io = initSocketIO();
 
 const startServer = (port) => {
+  console.log('STEP 3: lancement de server.listen() sur 0.0.0.0');
   server.listen(port, '0.0.0.0', () => {
+    console.log(`STEP 4: server.listen callback exécuté - serveur démarré sur 0.0.0.0:${port}`);
     console.log(`🚀 Serveur CFA démarré sur 0.0.0.0:${port}`);
     console.log('✅ Port ouvert - Render port scan devrait réussir');
   });
