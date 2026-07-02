@@ -1,14 +1,18 @@
+const DEFAULT_PRODUCTION_FRONTEND_URL = 'https://plateforme-cfa.vercel.app';
+
 const parseCorsOrigins = (value) => {
-  if (!value) {
+  const sourceValue = value || process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.CORS_ORIGIN;
+
+  if (!sourceValue) {
     if (process.env.NODE_ENV === 'production') {
-      console.error('❌ CLIENT_URL non défini en production. Définissez CLIENT_URL avec l origine de Vercel.');
-      return [];
+      console.warn(`⚠️ CLIENT_URL absent en production. Utilisation du fallback sécurisé ${DEFAULT_PRODUCTION_FRONTEND_URL}`);
+      return [DEFAULT_PRODUCTION_FRONTEND_URL];
     }
-    // Development: require explicit env var for localhost
+
     return process.env.DEV_LOCALHOST === 'true' ? ['http://localhost:5173'] : [];
   }
 
-  const origins = value
+  const origins = sourceValue
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);

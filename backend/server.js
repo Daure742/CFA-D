@@ -24,16 +24,14 @@ const { parseCorsOrigins } = require('./config/cors');
 // CRITICAL: Port must come from Render/environment
 const PORT = (() => {
   // On Render, PORT is ALWAYS provided via environment
-  const raw = process.env.PORT || process.env.RENDER_PORT;
+  const raw = process.env.PORT || process.env.RENDER_PORT || process.env.RENDER_INTERNAL_PORT || process.env.SERVER_PORT || process.env.HTTP_PORT;
   
   if (!raw) {
-    // If running locally without PORT, use 5000 for development
     if (process.env.NODE_ENV !== 'production') {
       console.warn('⚠️ PORT non fourni. Développement local sur 5000.');
       return 5000;
     }
-    // In production, PORT is REQUIRED
-    console.error('❌ CRITICAL: PORT environment variable is required in production.');
+    console.error('❌ CRITICAL: PORT environment variable is required in production. Vérifiez Render et le service Docker.');
     process.exit(1);
   }
   

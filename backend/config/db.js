@@ -5,10 +5,15 @@ const connectDB = async () => {
   mongoose.set('strictQuery', false);
   mongoose.set('bufferCommands', false);
 
-  const uri = (process.env.MONGO_URI || '').trim();
+  const uri = (process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGO_URI_ATLAS || '').trim();
 
   if (!uri) {
-    console.warn('⚠️ MONGO_URI manquant. Le serveur démarre en mode dégradé, mais MongoDB ne sera pas connecté.');
+    console.warn('⚠️ MONGO_URI / MONGODB_URI manquant. Le serveur démarre en mode dégradé, mais MongoDB ne sera pas connecté.');
+    return;
+  }
+
+  if (process.env.NODE_ENV === 'production' && /(mongodb:\/\/localhost|mongodb:\/\/127\.0\.0\.1|mongodb\+srv:\/\/localhost|mongodb\+srv:\/\/127\.0\.0\.1)/i.test(uri)) {
+    console.error('❌ URI MongoDB locale détectée en production. Utilisez un MongoDB Atlas sécurisé.');
     return;
   }
 
@@ -25,6 +30,8 @@ const connectDB = async () => {
     family: 4,
     autoIndex: false
   };
+
+  console.log('STEP 5: MongoDB Atlas connexion initialisée');
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const connectWithRetry = async () => {

@@ -50,7 +50,8 @@ app.use(helmet());
 app.use(cors(corsOptions));
 console.log('STEP 2: Express app configured - registering CORS options endpoint.');
 app.options(/.*/, cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(cookieParser());
 
 const limiter = rateLimit({
